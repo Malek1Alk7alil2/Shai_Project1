@@ -1,0 +1,220 @@
+import numpy as np
+import pandas as pd
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set_style('whitegrid')
+
+df = pd.read_csv('/content/911.csv')
+
+df.info()
+
+display(df.head())
+
+
+display(df['zip'].sort_values(ascending=False).head(5))
+
+df['zip'].describe()
+
+display(df['twp'].value_counts().head(5))
+display(df['twp'].describe())
+
+
+df['title'].nunique()
+
+df['Reason'] = df['title'].apply(lambda title: title.split(':')[0])
+
+df['Reason'].head()
+
+
+df['Reason'].value_counts().head(6)
+
+'''The most common reason for a 911 call is "EMS".
+
+then 'Traffic' and 'Fire
+'''
+
+sns.countplot(x = 'Reason', data = df, palette = 'viridis')
+
+plt.title('Reason for 911 Calls')
+
+plt.show()
+
+print(type(df['timeStamp'].iloc[0]))
+
+convert_to_Datetime = pd.to_datetime(df['timeStamp'])
+
+convert_to_Datetime.info()
+
+
+''' Extracts the hour from each datetime object in the 'timeStamp' column and stores it in a new column called 'Hour'.
+
+Extracts the month from each datetime object in the 'timeStamp' column and stores it in a new column called 'Month'.
+
+Extracts the day of the week from each datetime object in the 'timeStamp' column and stores it in a new column called 'Day of Week'
+'''
+df['Hour'] = pd.to_datetime(df['timeStamp']).dt.hour
+
+df['Month'] = pd.to_datetime(df['timeStamp']).dt.month
+
+df['Day of Week'] = pd.to_datetime(df['timeStamp']).dt.day_name()
+
+df.head()
+
+sns.countplot(x = 'Day of Week', data = df, hue = 'Reason', palette = 'viridis')
+
+plt.legend(bbox_to_anchor = (1.05, 1), loc=2, borderaxespad=0.)
+
+plt.show()
+
+sns.countplot(x = 'Month', data = df, hue = 'Reason', palette = 'viridis')
+
+plt.legend(bbox_to_anchor = (1.05, 1), loc=2, borderaxespad=0.)
+
+plt.show()
+
+by_month = df.groupby('Month').count()
+
+display(by_month.head())
+
+
+plt.plot(by_month.index, by_month['timeStamp'], marker = 'o', color = 'r')
+
+plt.title('Number of Calls per Month')
+
+plt.xlabel('Month')
+
+plt.ylabel('Number of Calls')
+
+plt.grid(True)
+
+plt.legend(bbox_to_anchor = (1.05, 1), loc=2, borderaxespad=0.)
+
+plt.show()
+
+
+sns.lmplot(x='Month', y='twp', data=by_month.reset_index(), height=6, aspect=1.5)
+
+plt.title('Number of Calls per Month')
+
+plt.grid(True)
+
+plt.legend(bbox_to_anchor = (1.05, 1), loc=2, borderaxespad=0.)
+
+plt.show()
+
+df['timeStamp'] = pd.to_datetime(df['timeStamp'])
+
+df['Date'] = df['timeStamp'].apply(lambda x: x.date())
+
+calls_per_date = df.groupby('Date').count()
+
+plt.figure(figsize=(10, 6))
+
+plt.plot(calls_per_date.index, calls_per_date['timeStamp'], marker='o', color = 'b')
+
+plt.title('Number of 911 Calls per Date')
+
+plt.xlabel('Date')
+
+plt.ylabel('Number of Calls')
+
+plt.grid(True)
+
+plt.show()
+
+
+df_Traffic = df[df['Reason'] == 'Traffic']
+
+plt.figure(figsize=(10, 6))
+
+plt.plot(calls_per_date_Traffic.index, calls_per_date_Traffic['timeStamp'], marker='o', color='r', label='Traffic')
+
+plt.title('Number of Traffic Calls per Date')
+
+plt.xlabel('Date')
+
+plt.ylabel('Number of Calls')
+
+plt.grid(True)
+
+plt.legend()
+
+plt.show()
+
+
+df_EMS = df[df['Reason'] == 'EMS']
+
+plt.figure(figsize=(10, 6))
+
+plt.plot(calls_per_date_EMS.index, calls_per_date_EMS['timeStamp'], marker='o', color='b', label='EMS')
+
+plt.title('Number of EMS Calls per Date')
+
+plt.xlabel('Date')
+
+plt.ylabel('Number of Calls')
+
+plt.grid(True)
+
+plt.legend()
+
+plt.show()
+
+
+df_Fire = df[df['Reason'] == 'Fire']
+
+plt.figure(figsize=(10, 6))
+
+plt.plot(calls_per_date_Fire.index, calls_per_date_Fire['timeStamp'], marker='o', color='g', label='Fire')
+
+plt.title('Number of Fire Calls per Date')
+
+plt.xlabel('Date')
+
+plt.ylabel('Number of Calls')
+
+plt.grid(True)
+
+plt.legend()
+
+plt.show()
+
+dayHour = df.groupby(by=['Day of Week', 'Hour']).count()['Reason'].unstack()
+
+display(dayHour.head())
+
+
+plt.figure(figsize=(12,6))
+
+sns.heatmap(dayHour,cmap='viridis')
+
+plt.show()
+
+
+plt.figure(figsize=(10, 8))
+
+sns.heatmap(dayHour, fmt="d", cmap="YlGnBu")
+
+plt.title('Heatmap of DataFrame')
+
+plt.show()
+
+sns.clustermap(dayHour, cmap="YlGnBu", annot=False, fmt="d")
+
+plt.show()
+
+dayMonth = df.groupby(by=['Day of Week', 'Month']).count()['Reason'].unstack()
+
+display(dayMonth.head())
+
+
+plt.figure(figsize=(12,6))
+
+sns.heatmap(dayMonth,cmap='viridis')
+
+plt.show()
+
+sns.clustermap(dayMonth, cmap="YlGnBu", annot=False, fmt="d")
+
+plt.show()
