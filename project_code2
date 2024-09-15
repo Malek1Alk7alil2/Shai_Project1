@@ -1,1 +1,153 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
+df = pd.read_csv('/content/athlete_events.csv')
+
+df.info()
+
+df.drop_duplicates(inplace=True)
+
+df.info()
+
+display(df.isna().sum())
+
+df['Sex'].value_counts()
+
+df['City'].value_counts()
+
+display(df['City'].value_counts().count())
+display(df['City'].unique())
+
+df.groupby('Year')['ID'].nunique()
+
+display(df.groupby(['Name', 'ID'])['Year'].count().sort_values(ascending=False).max())
+
+display(df.groupby(['Name', 'ID'])['Year'].count().sort_values(ascending=False).head())
+
+display(df.groupby(['Name', 'ID'])['Year'].count().sort_values(ascending=False).head(1))
+
+
+medal_counts = df.groupby(['Year', 'Medal'])['ID'].count().unstack().head(4)
+
+display(medal_counts)
+
+medal_counts.plot(kind='bar')
+
+medal_counts = medal_counts.rename(columns={'Gold':'N_Gold', 'Silver':'N_Silver', 'Bronze':'N_Bronze'})
+
+medal_counts = medal_counts[['N_Gold', 'N_Silver', 'N_Bronze']]
+
+display(medal_counts)
+
+
+gold_medals = df[df['Medal'] == 'Gold']
+
+gold_medals_by_city = gold_medals.groupby('City').size().reset_index(name='Gold Medals')
+
+plt.figure(figsize=(15, 5))
+
+sns.barplot(x = gold_medals_by_city['City'], y = gold_medals_by_city['Gold Medals'], color='gold', label = 'Number of winners gold medals', edgecolor = 'black')
+
+plt.xlabel('City')
+
+plt.ylabel('Number of Gold Medals')
+
+plt.title('Number of Gold Medal Winners in Each City')
+
+plt.xticks(rotation=45, ha='right')
+
+plt.tight_layout()
+
+plt.grid(True)
+
+plt.legend()
+
+plt.show()
+
+
+from scipy.stats import linregress
+
+missing_data_by_year = df.groupby('Year').apply(lambda x: x.isna().sum().sum()).reset_index(name='Missing_Persons')
+
+slope, intercept, r_value, p_value, std_err = linregress(missing_data_by_year['Year'], missing_data_by_year['Missing_Persons'])
+
+line = slope * missing_data_by_year['Year'] + intercept
+
+
+plt.figure(figsize=(20, 10))
+
+
+plt.scatter(missing_data_by_year['Year'], missing_data_by_year['Missing_Persons'], label='Missing Persons', color='blue', s=100, alpha=0.7, edgecolor='black')
+
+plt.plot(missing_data_by_year['Year'], line, color = 'r', linestyle = '--', label = f'Linear Regression Line (R^2 = {r_value**2:.2f})')
+
+residuals = missing_data_by_year['Missing_Persons'] - line
+
+outliers = missing_data_by_year[abs(residuals) > residuals.std()]
+
+plt.scatter(outliers['Year'], outliers['Missing_Persons'], marker = 'x',color='red', s=150, alpha=0.7, label ='OutLiers')
+
+plt.xticks(rotation=30, ha='right')
+
+plt.title('Total Missing Persons Reported Each Year', fontsize = 16)
+
+plt.xlabel('Year', fontsize = 16)
+
+plt.ylabel('Number of Missing Persons', fontsize = 16)
+
+plt.grid(True, linestyle='--', alpha=0.7)
+
+sns.despine()
+
+
+plt.xticks(missing_data_by_year['Year'],  rotation=45, ha='right')
+
+plt.yticks(fontsize = 12)
+
+plt.legend()
+
+plt.tight_layout()
+
+plt.show()
+
+
+
+missing_data_by_year = df.groupby('Year').apply(lambda x: x.isna().sum().sum()).reset_index(name='Missing_Persons')
+
+display(missing_data_by_year)
+
+
+athlete_counts_by_season = df.groupby(['Year', 'Season'])['ID'].nunique().unstack()
+
+plt.figure(figsize=(12, 6))
+
+plt.plot(athlete_counts_by_season.index, athlete_counts_by_season['Summer'], label='Summer')
+
+plt.plot(athlete_counts_by_season.index, athlete_counts_by_season['Winter'], label='Winter')
+
+plt.xlabel('Year')
+
+plt.ylabel('Number of Athletes')
+
+plt.title('Number of Athletes Over Time (Summer vs. Winter)')
+
+plt.legend()
+
+plt.grid(True)
+
+plt.show()
+
+
+count_seasons = df.groupby(['Year', 'Season'])['ID'].nunique().unstack()
+
+display(count_seasons)
+
+correlation_summer = count_seasons['Summer'].corr(count_seasons['Summer'].index.to_series())
+
+correlation_winter = count_seasons['Winter'].corr(count_seasons['Winter'].index.to_series())
+
+print(f"Correlation between Year and Number of Summer Athletes: {correlation_summer}")
+
+print(f"Correlation between Year and Number of Winter Athletes: {correlation_winter}")
