@@ -1,32 +1,51 @@
+# import libraries.
 import numpy as np
 import pandas as pd
-
 import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set_style('whitegrid')
 
+# Read data in Data frame
 df = pd.read_csv('/content/911.csv')
 
+
+# Understand What in data set
 df.info()
 
 display(df.head())
 
 
-display(df['zip'].sort_values(ascending=False).head(5))
+# Top 5 ZipCodes in data frame
+# Calculate the maximum count of zip codes
+
+df['zip'].value_counts().head(5)
+
+max_count = df['zip'].value_counts().max()
+
+# Find the zip code that occurs most frequently
+max_zip = df['zip'].value_counts().idxmax()
+
+# Display the results
+print(f"Zip Code: {max_zip}, Count: {max_count}")
 
 df['zip'].describe()
 
+# Top 5 townships in Data frame
 display(df['twp'].value_counts().head(5))
+
 display(df['twp'].describe())
 
 
+# number of unique title
 df['title'].nunique()
 
-df['Reason'] = df['title'].apply(lambda title: title.split(':')[0])
+# Craete new feature specified before the title code
+df['Reason'] = df['title'].apply(lambda title: title.split(':')[0] if isinstance(title, str) else None)
 
 df['Reason'].head()
 
 
+# most reason call 911
 df['Reason'].value_counts().head(6)
 
 '''The most common reason for a 911 call is "EMS".
@@ -34,14 +53,17 @@ df['Reason'].value_counts().head(6)
 then 'Traffic' and 'Fire
 '''
 
+# plot to see most reason call 911
 sns.countplot(x = 'Reason', data = df, palette = 'viridis')
 
 plt.title('Reason for 911 Calls')
 
 plt.show()
 
+# type values in timeStamp
 print(type(df['timeStamp'].iloc[0]))
 
+# convert_timeStamp_to_Datetime 
 convert_to_Datetime = pd.to_datetime(df['timeStamp'])
 
 convert_to_Datetime.info()
@@ -61,23 +83,27 @@ df['Day of Week'] = pd.to_datetime(df['timeStamp']).dt.day_name()
 
 df.head()
 
+# count Day of week based of Reason
 sns.countplot(x = 'Day of Week', data = df, hue = 'Reason', palette = 'viridis')
 
 plt.legend(bbox_to_anchor = (1.05, 1), loc=2, borderaxespad=0.)
 
 plt.show()
 
+# count Day of week based of Reason
 sns.countplot(x = 'Month', data = df, hue = 'Reason', palette = 'viridis')
 
 plt.legend(bbox_to_anchor = (1.05, 1), loc=2, borderaxespad=0.)
 
 plt.show()
 
+# Group by with month
 by_month = df.groupby('Month').count()
 
 display(by_month.head())
 
 
+# plot to dataframe indicating the count of calls per mont
 plt.plot(by_month.index, by_month['timeStamp'], marker = 'o', color = 'r')
 
 plt.title('Number of Calls per Month')
@@ -93,6 +119,7 @@ plt.legend(bbox_to_anchor = (1.05, 1), loc=2, borderaxespad=0.)
 plt.show()
 
 
+#  create a linear fit on the number of calls per month 
 sns.lmplot(x='Month', y='twp', data=by_month.reset_index(), height=6, aspect=1.5)
 
 plt.title('Number of Calls per Month')
@@ -103,26 +130,15 @@ plt.legend(bbox_to_anchor = (1.05, 1), loc=2, borderaxespad=0.)
 
 plt.show()
 
+
+# Create a new column called 'Date' that contains the date from the timeStamp column
 df['timeStamp'] = pd.to_datetime(df['timeStamp'])
 
 df['Date'] = df['timeStamp'].apply(lambda x: x.date())
 
+
+# groupby this Date column with the count() aggregate and create a plot of counts of 911 calls.
 calls_per_date = df.groupby('Date').count()
-
-plt.figure(figsize=(10, 6))
-
-plt.plot(calls_per_date.index, calls_per_date['timeStamp'], marker='o', color = 'b')
-
-plt.title('Number of 911 Calls per Date')
-
-plt.xlabel('Date')
-
-plt.ylabel('Number of Calls')
-
-plt.grid(True)
-
-plt.show()
-
 
 df_Traffic = df[df['Reason'] == 'Traffic']
 
@@ -180,18 +196,21 @@ plt.legend()
 
 plt.show()
 
+
+#  restructure the dataframe so that the columns become the Hours and the Index becomes the Day of the Week
 dayHour = df.groupby(by=['Day of Week', 'Hour']).count()['Reason'].unstack()
 
 display(dayHour.head())
 
 
+# creating heatmaps with seaborn and our data.
 plt.figure(figsize=(12,6))
 
 sns.heatmap(dayHour,cmap='viridis')
 
 plt.show()
 
-
+# HeatMap using this new DataFrame.
 plt.figure(figsize=(10, 8))
 
 sns.heatmap(dayHour, fmt="d", cmap="YlGnBu")
@@ -200,15 +219,17 @@ plt.title('Heatmap of DataFrame')
 
 plt.show()
 
+# create a clustermap using this DataFrame.
 sns.clustermap(dayHour, cmap="YlGnBu", annot=False, fmt="d")
 
 plt.show()
 
+# that shows the Month as the column
 dayMonth = df.groupby(by=['Day of Week', 'Month']).count()['Reason'].unstack()
 
 display(dayMonth.head())
 
-
+# apllied the last point in plots
 plt.figure(figsize=(12,6))
 
 sns.heatmap(dayMonth,cmap='viridis')
